@@ -24,8 +24,14 @@ export async function onRequestPost(context) {
     try { parsed = new URL(url); } catch { return json({ error: '链接格式不正确' }, 400); }
     if (!['http:', 'https:'].includes(parsed.protocol)) return json({ error: '仅支持 http / https 链接' }, 400);
 
+    // Turnstile 人机验证（配了 secret 才验证）
+    if (env.TURNSTILE_SECRET) {
+      const ok = await verifyTurnstile(body.turnstileToken, clientIP, env.TURNSTILE_SECRET);
+      if (!ok) return json({ error: '人机验证失败，请刷新重试' }, 403);
+    }
+
     // 多源恶意链接检测
-    const blockReason = await checkUrlSafety(parsed.toString(), parsed.hostname, env);
+    const blockReason = await checkUrlSafety(parsed.toString(), parsed.hostname);
     if (blockReason) {
       return json({ error: `该链接被安全检测标记为${blockReason}，无法生成短链` }, 400);
     }
@@ -48,11 +54,26 @@ export async function onRequestPost(context) {
   }
 }
 
-async function checkUrlSafety(url, domain, env) {
-  const checks = [checkPhishDestroy, checkPhishunt, checkGoogleSB];
+async function verifyTurnstile(token, ip, secret) {
+  if (!token) return false;
+  try {
+    const form = new FormData();
+    form.append('secret', secret);
+    form.append('response', token);
+    if (ip) form.append('remoteip', ip);
+    const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST', body: form, signal: AbortSignal.timeout(5000)
+    });
+    const data = await res.json();
+    return !!data.success;
+  } catch { return false; }
+}
+
+async function checkUrlSafety(url, domain) {
+  const checks = [checkPhishDestroy, checkPhishunt, checkScamLens];
   for (const check of checks) {
     try {
-      const result = await check(url, domain, env);
+      const result = await check(url, domain);
       if (result) return result;
     } catch {}
   }
@@ -62,8 +83,7 @@ async function checkUrlSafety(url, domain, env) {
 async function checkPhishDestroy(url, domain) {
   try {
     const res = await fetch(`https://api.destroy.tools/v1/check?domain=${encodeURIComponent(domain)}`, {
-      headers: { 'User-Agent': 'd-aozio-cn' },
-      signal: AbortSignal.timeout(5000)
+      headers: { 'User-Agent': 'd-aozio-cn' }, signal: AbortSignal.timeout(5000)
     });
     const data = await res.json();
     if (data.threat && data.severity !== 'low') return '钓鱼/诈骗网站';
@@ -74,8 +94,7 @@ async function checkPhishDestroy(url, domain) {
 async function checkPhishunt(url, domain) {
   try {
     const res = await fetch(`https://phishunt.io/api/v1/analyze?url=${encodeURIComponent(url)}`, {
-      headers: { 'User-Agent': 'd-aozio-cn' },
-      signal: AbortSignal.timeout(5000)
+      headers: { 'User-Agent': 'd-aozio-cn' }, signal: AbortSignal.timeout(5000)
     });
     const data = await res.json();
     if (data.verdict === 'likely_phishing' || data.verdict === 'very_likely_phishing') return '钓鱼网站';
@@ -83,25 +102,13 @@ async function checkPhishunt(url, domain) {
   return null;
 }
 
-async function checkGoogleSB(url, domain, env) {
-  if (!env.GSB_API_KEY) return null;
+async function checkScamLens(url, domain) {
   try {
-    const res = await fetch(`https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${env.GSB_API_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        client: { clientId: 'd-aozio-cn', clientVersion: '1.0' },
-        threatInfo: {
-          threatTypes: ['MALWARE', 'SOCIAL_ENGINEERING', 'UNWANTED_SOFTWARE'],
-          platformTypes: ['ANY_PLATFORM'],
-          threatEntryTypes: ['URL'],
-          threatEntries: [{ url }]
-        }
-      }),
-      signal: AbortSignal.timeout(5000)
+    const res = await fetch(`https://scamlens.org/v1/public/check?domain=${encodeURIComponent(domain)}`, {
+      headers: { 'User-Agent': 'd-aozio-cn' }, signal: AbortSignal.timeout(5000)
     });
     const data = await res.json();
-    if (data.matches && data.matches.length > 0) return '恶意软件网站';
+    if (data.risk_level === 'high' || data.risk_level === 'critical') return '高风险诈骗网站';
   } catch {}
   return null;
 }

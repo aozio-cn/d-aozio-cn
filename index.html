@@ -51,6 +51,7 @@
   }
   footer a { color: #999; text-decoration: none; }
 </style>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 <body>
   <div class="container">
@@ -78,6 +79,8 @@
     </div>
 
     <div class="error" id="error"></div>
+
+    <div class="cf-turnstile" data-sitekey="0x4AAAAAAFOanFHh442OmbPE" data-size="invisible" data-callback="onTurnstile"></div>
 
     <div class="result" id="resultBox">
       <div class="result-label">你的短链接</div>
@@ -134,13 +137,23 @@
       try { new URL(url); } catch { showError('链接格式不正确'); return; }
 
       genBtn.disabled = true;
-      genBtn.textContent = '生成中...';
+      genBtn.textContent = '验证中...';
 
       try {
+        let turnstileToken = '';
+        if (window.turnstile) {
+          turnstileToken = await new Promise((resolve, reject) => {
+            window.onTurnstile = token => resolve(token);
+            window.turnstile.execute();
+            setTimeout(() => reject(new Error('timeout')), 10000);
+          });
+        }
+
+        genBtn.textContent = '生成中...';
         const res = await fetch('/api/shorten', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url, days: parseInt(daysSelect.value) })
+          body: JSON.stringify({ url, days: parseInt(daysSelect.value), turnstileToken })
         });
         const data = await res.json();
         if (!res.ok) { showError(data.error || '生成失败'); return; }
@@ -149,7 +162,7 @@
         copyBtn.textContent = '复制';
         copyBtn.classList.remove('copied');
       } catch (e) {
-        showError('网络错误，请重试');
+        showError('验证失败，请重试');
       } finally {
         genBtn.disabled = false;
         genBtn.textContent = '生成';
