@@ -200,7 +200,7 @@ function renderAdminPage() {
   h += '    html += "<td class=\'ip\'>"+esc(l.ip||"-")+"</td>";\n';
   h += '    html += "<td><span class=\'short-link\' onclick=\'copyText(\\\'"+esc(shortUrl)+"\\\')\'>"+esc(shortUrl)+"</span></td>";\n';
   h += '    if(isLong){\n';
-  h += '      html += "<td><span class=\'orig-url\'><span class=\'ellipsis\' onclick=\'this.parentElement.classList.add(\"expanded\")\'>"+esc(long.slice(0,50))+"… 展开</span><span class=\'full\' onclick=\'copyText(\\\'"+esc(long)+"\\\')\'>"+esc(long)+"（点击复制）</span></span></td>";\n';
+  h += '      html += "<td><span class=\'orig-url\'><span class=\'ellipsis\' onclick=\'this.parentElement.classList.add(&quot;expanded&quot;)\'>"+esc(long.slice(0,50))+"… 展开</span><span class=\'full\' onclick=\'copyText(\\\'"+esc(long)+"\\\')\'>"+esc(long)+"（点击复制）</span></span></td>";\n';
   h += '    } else {\n';
   h += '      html += "<td><span onclick=\'copyText(\\\'"+esc(long)+"\\\')\' style=\'cursor:pointer;color:#666\'>"+esc(long)+"</span></td>";\n';
   h += '    }\n';

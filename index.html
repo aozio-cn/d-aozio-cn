@@ -113,11 +113,14 @@
   <div class="container">
     <h1>短链接生成</h1>
     <p class="subtitle">输入长链接，一键生成 d.aozio.cn 短链</p>
-    <p style="font-size:12px;color:#ccc;margin-bottom:40px;">© <span id="copyright"></span> · <a href="/admin" style="color:#bbb;text-decoration:none;">后台</a></p>
 
     <div class="input-row">
       <input type="text" id="urlInput" placeholder="example.com 或 https://example.com" autocomplete="off">
       <button class="btn-primary" id="genBtn" onclick="generate()">生成</button>
+    </div>
+
+    <div style="margin-top:14px;font-size:12px;color:#ccc;">
+      后台：<a href="/admin" style="color:#aaa;text-decoration:none;">/admin</a>
     </div>
 
     <div class="error" id="error"></div>
@@ -129,11 +132,14 @@
     </div>
   </div>
 
+  <footer style="position:fixed;bottom:20px;left:0;right:0;text-align:center;font-size:12px;color:#ccc;">
+    © <span id="copyright"></span> 星诺综合团队
+  </footer>
+
   <script>
     (function() {
       var y = new Date().getFullYear();
-      var s = y === 2026 ? '2026 星诺综合团队' : '2026-' + y + ' 星诺综合团队';
-      document.getElementById('copyright').textContent = s;
+      document.getElementById('copyright').textContent = y === 2026 ? '2026' : '2026-' + y;
     })();
   </script>
 
