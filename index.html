@@ -113,6 +113,7 @@
   <div class="container">
     <h1>短链接生成</h1>
     <p class="subtitle">输入长链接，一键生成 d.aozio.cn 短链</p>
+    <p style="font-size:12px;color:#ccc;margin-bottom:40px;">© <span id="copyright"></span> · <a href="/admin" style="color:#bbb;text-decoration:none;">后台</a></p>
 
     <div class="input-row">
       <input type="text" id="urlInput" placeholder="example.com 或 https://example.com" autocomplete="off">
@@ -128,15 +129,10 @@
     </div>
   </div>
 
-  <footer style="margin-top:40px;font-size:12px;color:#ccc;text-align:center;">
-    <span id="copyright"></span>
-  </footer>
-
   <script>
-    // 版权：2026年显示 © 2026，跨年显示 © 2026-当前年
     (function() {
       var y = new Date().getFullYear();
-      var s = y === 2026 ? '© 2026 星诺综合团队' : '© 2026-' + y + ' 星诺综合团队';
+      var s = y === 2026 ? '2026 星诺综合团队' : '2026-' + y + ' 星诺综合团队';
       document.getElementById('copyright').textContent = s;
     })();
   </script>
