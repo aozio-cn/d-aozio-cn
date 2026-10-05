@@ -20,11 +20,19 @@ export async function onRequestPost(context) {
       return json({ error: '仅支持 http / https 链接' }, 400);
     }
 
-    // 生成 6 位随机短码（大小写字母 + 数字）
-    const code = generateCode(6);
+    // 生成 6 位随机短码，碰撞就重新生成
+    let code = generateCode(6);
+    while (await env.LINKS.get(code)) {
+      code = generateCode(6);
+    }
 
-    // 存入 KV
-    await env.LINKS.put(code, parsed.toString());
+    // 存元数据：URL + 时间 + IP
+    const meta = {
+      url: parsed.toString(),
+      time: Date.now(),
+      ip: request.headers.get('cf-connecting-ip') || ''
+    };
+    await env.LINKS.put(code, JSON.stringify(meta));
 
     const short = `https://d.aozio.cn/${code}`;
     return json({ short, code });
