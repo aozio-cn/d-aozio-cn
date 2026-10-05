@@ -3,7 +3,6 @@ export async function onRequestGet(context) {
 
   const code = Array.isArray(params.path) ? params.path.join('/') : String(params.path || '');
 
-  // 空路径（首页）→ 交给静态资源
   if (!code) {
     return env.ASSETS.fetch(request);
   }
@@ -11,7 +10,6 @@ export async function onRequestGet(context) {
   const raw = await env.LINKS.get(code);
 
   if (raw) {
-    // 兼容新旧格式：新格式是 JSON，旧格式是纯 URL
     let target;
     try {
       const meta = JSON.parse(raw);
@@ -38,32 +36,40 @@ function renderWarningPage(target) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>跳转提示 · d.aozio.cn</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif; background: #fff; color: #333; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-  .box { max-width: 440px; width: 100%; text-align: center; }
-  .icon { font-size: 44px; margin-bottom: 16px; }
-  h1 { font-size: 22px; font-weight: 600; color: #111; margin-bottom: 10px; }
-  .tip { color: #888; font-size: 14px; line-height: 1.6; margin-bottom: 24px; }
-  .url-box { font-size: 12px; color: #aaa; word-break: break-all; padding: 12px; background: #f7f7f7; border-radius: 8px; margin-bottom: 20px; text-align: left; }
-  .btn { display: inline-block; padding: 11px 28px; background: #111; color: #fff; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; text-decoration: none; }
-  .btn:hover { background: #333; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif; background:#f5f6f7; color:#333; min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; }
+  .box { max-width:520px; width:100%; background:#fff; border-radius:12px; padding:40px 32px; box-shadow:0 2px 12px rgba(0,0,0,0.06); }
+  .warn-icon { width:48px; height:48px; background:#fff7e6; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; font-size:24px; }
+  h1 { font-size:18px; font-weight:600; color:#111; text-align:center; margin-bottom:12px; }
+  .desc { font-size:14px; color:#666; line-height:1.6; text-align:center; margin-bottom:20px; }
+  .url-box { background:#f7f8fa; border-radius:8px; padding:12px 14px; font-size:13px; color:#333; word-break:break-all; margin-bottom:24px; line-height:1.5; }
+  .url-label { font-size:12px; color:#999; margin-bottom:6px; }
+  .btns { display:flex; gap:12px; }
+  .btn { flex:1; padding:11px; border-radius:8px; font-size:14px; text-align:center; cursor:pointer; border:none; text-decoration:none; display:block; }
+  .btn-primary { background:#111; color:#fff; }
+  .btn-primary:hover { background:#333; }
+  .btn-cancel { background:#f0f0f0; color:#666; }
+  .btn-cancel:hover { background:#e5e5e5; }
+  .footer { margin-top:28px; text-align:center; font-size:12px; color:#bbb; line-height:1.8; }
+  .footer a { color:#aaa; text-decoration:none; }
 </style>
 </head>
 <body>
   <div class="box">
-    <div class="icon">⚠️</div>
-    <h1>即将跳转到外部链接</h1>
-    <p class="tip">该链接内容与本站无关，请自行判断安全性</p>
+    <div class="warn-icon">⚠️</div>
+    <h1>即将跳转到外部网站</h1>
+    <p class="desc">请注意辨别风险，该链接内容与本站无关</p>
+    <div class="url-label">目标地址：</div>
     <div class="url-box">${escapeHtml(target)}</div>
-    <a href="${escapeHtml(target)}" class="btn">立即跳转</a>
+    <div class="btns">
+      <a href="${escapeHtml(target)}" class="btn btn-primary">继续访问</a>
+      <a href="/" class="btn btn-cancel">取消</a>
+    </div>
   </div>
-  <script>
-    setTimeout(function() {
-      document.body.innerHTML = '';
-      document.body.style.background = '#fff';
-      location.href = ${JSON.stringify(target)};
-    }, 500);
-  </script>
+  <div class="footer">
+    <div>© 2026 星诺综合团队</div>
+    <div>举报/投诉：<a href="mailto:huangxingyan@aozio.cn">huangxingyan@aozio.cn</a></div>
+  </div>
 </body>
 </html>`;
 }
@@ -76,7 +82,7 @@ function render404(code) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>404 · d.aozio.cn</title>
 <style>
-  body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; background:#fff; color:#333; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; margin:0; padding:20px; text-align:center; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif; background:#f5f6f7; color:#333; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; margin:0; padding:20px; text-align:center; }
   h1 { font-size:48px; font-weight:600; color:#111; margin-bottom:8px; }
   p { color:#999; font-size:15px; margin-bottom:24px; }
   a { color:#666; text-decoration:none; font-size:14px; }

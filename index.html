@@ -1,113 +1,56 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>短链接生成 · d.aozio.cn</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
-      background: #fff;
-      color: #333;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    .container {
-      max-width: 480px;
-      width: 100%;
-      text-align: center;
-    }
-    h1 {
-      font-size: 26px;
-      font-weight: 600;
-      color: #111;
-      margin-bottom: 6px;
-    }
-    .subtitle {
-      color: #999;
-      font-size: 14px;
-      margin-bottom: 40px;
-    }
-    .input-row {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-    input[type="text"] {
-      flex: 1;
-      padding: 12px 14px;
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      font-size: 14px;
-      outline: none;
-      transition: border-color 0.15s;
-      color: #333;
-    }
-    input[type="text"]:focus {
-      border-color: #999;
-    }
-    input[type="text"]::placeholder {
-      color: #bbb;
-    }
-    .btn-primary {
-      padding: 12px 22px;
-      background: #111;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      cursor: pointer;
-      transition: background 0.15s;
-      white-space: nowrap;
-    }
-    .btn-primary:hover { background: #333; }
-    .btn-primary:disabled { background: #bbb; cursor: not-allowed; }
-    .error {
-      color: #e74c3c;
-      font-size: 13px;
-      margin-top: 8px;
-      display: none;
-    }
-    .error.show { display: block; }
-    .result {
-      margin-top: 28px;
-      padding: 20px;
-      background: #f7f7f7;
-      border-radius: 10px;
-      display: none;
-    }
-    .result.show { display: block; }
-    .result-label {
-      font-size: 12px;
-      color: #999;
-      margin-bottom: 8px;
-      letter-spacing: 0.5px;
-    }
-    .short-url {
-      font-size: 18px;
-      color: #111;
-      font-weight: 500;
-      word-break: break-all;
-      margin-bottom: 14px;
-    }
-    .btn-copy {
-      padding: 8px 18px;
-      background: #fff;
-      color: #555;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 13px;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .btn-copy:hover { background: #f0f0f0; border-color: #ccc; }
-    .btn-copy.copied { background: #111; color: #fff; border-color: #111; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>短链接生成 · d.aozio.cn</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #fff; color: #333; min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
+  }
+  .container { max-width: 480px; width: 100%; text-align: center; }
+  h1 { font-size: 26px; font-weight: 600; color: #111; margin-bottom: 6px; }
+  .subtitle { color: #999; font-size: 14px; margin-bottom: 30px; }
+  .input-row { display: flex; gap: 8px; margin-bottom: 12px; }
+  input[type="text"] {
+    flex: 1; padding: 12px 14px; border: 1px solid #e0e0e0; border-radius: 8px;
+    font-size: 14px; outline: none; color: #333;
+  }
+  input[type="text"]:focus { border-color: #999; }
+  input[type="text"]::placeholder { color: #bbb; }
+  .expire-row { display: flex; gap: 6px; margin-bottom: 16px; align-items: center; }
+  .expire-row label { font-size: 12px; color: #999; white-space: nowrap; }
+  .expire-row select {
+    flex: 1; padding: 8px 10px; border: 1px solid #e0e0e0; border-radius: 6px;
+    font-size: 13px; outline: none; background: #fff; color: #333;
+  }
+  .btn-primary {
+    padding: 12px 22px; background: #111; color: #fff; border: none;
+    border-radius: 8px; font-size: 14px; cursor: pointer; white-space: nowrap;
+  }
+  .btn-primary:hover { background: #333; }
+  .btn-primary:disabled { background: #bbb; cursor: not-allowed; }
+  .error { color: #e74c3c; font-size: 13px; margin-top: 8px; display: none; }
+  .error.show { display: block; }
+  .result { margin-top: 24px; padding: 20px; background: #f7f7f7; border-radius: 10px; display: none; }
+  .result.show { display: block; }
+  .result-label { font-size: 12px; color: #999; margin-bottom: 8px; }
+  .short-url { font-size: 18px; color: #111; font-weight: 500; word-break: break-all; margin-bottom: 14px; }
+  .btn-copy {
+    padding: 8px 18px; background: #fff; color: #555; border: 1px solid #ddd;
+    border-radius: 6px; font-size: 13px; cursor: pointer;
+  }
+  .btn-copy:hover { background: #f0f0f0; }
+  .btn-copy.copied { background: #111; color: #fff; border-color: #111; }
+  footer {
+    margin-top: 50px; text-align: center; font-size: 12px; color: #bbb;
+    line-height: 1.8; max-width: 480px;
+  }
+  footer a { color: #999; text-decoration: none; }
+</style>
 </head>
 <body>
   <div class="container">
@@ -119,7 +62,18 @@
       <button class="btn-primary" id="genBtn" onclick="generate()">生成</button>
     </div>
 
-    <div style="margin-top:14px;font-size:12px;color:#ccc;">
+    <div class="expire-row">
+      <label>有效期</label>
+      <select id="daysSelect">
+        <option value="7">7 天</option>
+        <option value="14">14 天</option>
+        <option value="30" selected>30 天</option>
+        <option value="90">90 天</option>
+        <option value="180">180 天</option>
+      </select>
+    </div>
+
+    <div style="font-size:12px;color:#ccc;margin-bottom:10px;">
       后台：<a href="/admin" style="color:#aaa;text-decoration:none;">/admin</a>
     </div>
 
@@ -132,8 +86,18 @@
     </div>
   </div>
 
-  <footer style="position:fixed;bottom:20px;left:0;right:0;text-align:center;font-size:12px;color:#ccc;">
-    © <span id="copyright"></span> 星诺综合团队
+  <footer>
+    <div>© <span id="copyright"></span> 星诺综合团队</div>
+    <div style="margin-top:6px;">
+      本站提供网址缩短服务，短链接目标内容由创建者自行发布，本服务不对目标网站内容承担责任。
+    </div>
+    <div style="margin-top:6px;">
+      【举报/投诉】如发现短链接指向钓鱼、诈骗、色情、暴力、侵权或其他违法违规内容，请发送邮件至
+      <a href="mailto:huangxingyan@aozio.cn">huangxingyan@aozio.cn</a>，附涉事短链接及问题说明，我们将在 7 个工作日内受理并删除。
+    </div>
+    <div style="margin-top:6px;">
+      用户协议：您不得利用本服务制作、传播含有违法违规、侵犯他人权益或恶意软件内容的短链接。您应对自己创建的短链接负责，并同意在收到投诉后配合删除。
+    </div>
   </footer>
 
   <script>
@@ -150,18 +114,14 @@
     const resultBox = document.getElementById('resultBox');
     const shortUrlText = document.getElementById('shortUrlText');
     const copyBtn = document.getElementById('copyBtn');
+    const daysSelect = document.getElementById('daysSelect');
 
-    input.addEventListener('keydown', e => {
-      if (e.key === 'Enter') generate();
-    });
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') generate(); });
 
     function normalizeUrl(raw) {
       let url = raw.trim();
       if (!url) return '';
-      // 用户没写协议 → 自动补 https://
-      if (!/^https?:\/\//i.test(url)) {
-        url = 'https://' + url;
-      }
+      if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
       return url;
     }
 
@@ -169,26 +129,9 @@
       const raw = input.value.trim();
       errorBox.classList.remove('show');
       resultBox.classList.remove('show');
-
-      if (!raw) {
-        showError('请输入链接');
-        return;
-      }
-
+      if (!raw) { showError('请输入链接'); return; }
       const url = normalizeUrl(raw);
-
-      let parsed;
-      try {
-        parsed = new URL(url);
-      } catch {
-        showError('链接格式不正确');
-        return;
-      }
-
-      if (!['http:', 'https:'].includes(parsed.protocol)) {
-        showError('仅支持 http / https 链接');
-        return;
-      }
+      try { new URL(url); } catch { showError('链接格式不正确'); return; }
 
       genBtn.disabled = true;
       genBtn.textContent = '生成中...';
@@ -197,15 +140,10 @@
         const res = await fetch('/api/shorten', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: parsed.toString() })
+          body: JSON.stringify({ url, days: parseInt(daysSelect.value) })
         });
         const data = await res.json();
-
-        if (!res.ok) {
-          showError(data.error || '生成失败，请重试');
-          return;
-        }
-
+        if (!res.ok) { showError(data.error || '生成失败'); return; }
         shortUrlText.textContent = data.short;
         resultBox.classList.add('show');
         copyBtn.textContent = '复制';
@@ -218,20 +156,13 @@
       }
     }
 
-    function showError(msg) {
-      errorBox.textContent = msg;
-      errorBox.classList.add('show');
-    }
+    function showError(msg) { errorBox.textContent = msg; errorBox.classList.add('show'); }
 
     function copyUrl() {
-      const text = shortUrlText.textContent;
-      navigator.clipboard.writeText(text).then(() => {
+      navigator.clipboard.writeText(shortUrlText.textContent).then(() => {
         copyBtn.textContent = '已复制 ✓';
         copyBtn.classList.add('copied');
-        setTimeout(() => {
-          copyBtn.textContent = '复制';
-          copyBtn.classList.remove('copied');
-        }, 2000);
+        setTimeout(() => { copyBtn.textContent = '复制'; copyBtn.classList.remove('copied'); }, 2000);
       });
     }
   </script>
