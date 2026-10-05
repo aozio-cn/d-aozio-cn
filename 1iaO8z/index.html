@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>跳转中...</title>
+<script type="application/json" id="meta">{"url":"https://v.douyin.com/DEOStCtFt14","time":1791203489859,"ip":"2408:824e:bb00:1a41:6897:7b0c:6b25:bfb7","code":"1iaO8z"}</script>
+</head>
+<body style="background:#fff;">
+<script>
+var meta = JSON.parse(document.getElementById("meta").textContent);
+setTimeout(function(){
+  document.body.innerHTML = "";
+  document.body.style.background = "#fff";
+  location.href = meta.url;
+}, 500);
+</script>
+</body>
+</html>
