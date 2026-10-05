@@ -47,7 +47,6 @@ function renderWarningPage(target) {
   .url-box { font-size: 12px; color: #aaa; word-break: break-all; padding: 12px; background: #f7f7f7; border-radius: 8px; margin-bottom: 20px; text-align: left; }
   .btn { display: inline-block; padding: 11px 28px; background: #111; color: #fff; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; text-decoration: none; }
   .btn:hover { background: #333; }
-  .cd { margin-top: 14px; font-size: 12px; color: #bbb; }
 </style>
 </head>
 <body>
@@ -57,10 +56,13 @@ function renderWarningPage(target) {
     <p class="tip">该链接内容与本站无关，请自行判断安全性</p>
     <div class="url-box">${escapeHtml(target)}</div>
     <a href="${escapeHtml(target)}" class="btn">立即跳转</a>
-    <div class="cd">0.5 秒后自动跳转…</div>
   </div>
   <script>
-    setTimeout(function() { location.href = ${JSON.stringify(target)}; }, 500);
+    setTimeout(function() {
+      document.body.innerHTML = '';
+      document.body.style.background = '#fff';
+      location.href = ${JSON.stringify(target)};
+    }, 500);
   </script>
 </body>
 </html>`;
