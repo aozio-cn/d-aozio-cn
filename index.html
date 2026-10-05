@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>短链接生成 · d.aozio.cn</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: #fff;
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+    }
+    h1 {
+      font-size: 26px;
+      font-weight: 600;
+      color: #111;
+      margin-bottom: 6px;
+    }
+    .subtitle {
+      color: #999;
+      font-size: 14px;
+      margin-bottom: 40px;
+    }
+    .input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 12px 14px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s;
+      color: #333;
+    }
+    input[type="text"]:focus {
+      border-color: #999;
+    }
+    input[type="text"]::placeholder {
+      color: #bbb;
+    }
+    .btn-primary {
+      padding: 12px 22px;
+      background: #111;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .btn-primary:hover { background: #333; }
+    .btn-primary:disabled { background: #bbb; cursor: not-allowed; }
+    .error {
+      color: #e74c3c;
+      font-size: 13px;
+      margin-top: 8px;
+      display: none;
+    }
+    .error.show { display: block; }
+    .result {
+      margin-top: 28px;
+      padding: 20px;
+      background: #f7f7f7;
+      border-radius: 10px;
+      display: none;
+    }
+    .result.show { display: block; }
+    .result-label {
+      font-size: 12px;
+      color: #999;
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+    }
+    .short-url {
+      font-size: 18px;
+      color: #111;
+      font-weight: 500;
+      word-break: break-all;
+      margin-bottom: 14px;
+    }
+    .btn-copy {
+      padding: 8px 18px;
+      background: #fff;
+      color: #555;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-copy:hover { background: #f0f0f0; border-color: #ccc; }
+    .btn-copy.copied { background: #111; color: #fff; border-color: #111; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>短链接生成</h1>
+    <p class="subtitle">输入长链接，一键生成 d.aozio.cn 短链</p>
+
+    <div class="input-row">
+      <input type="text" id="urlInput" placeholder="example.com 或 https://example.com" autocomplete="off">
+      <button class="btn-primary" id="genBtn" onclick="generate()">生成</button>
+    </div>
+
+    <div class="error" id="error"></div>
+
+    <div class="result" id="resultBox">
+      <div class="result-label">你的短链接</div>
+      <div class="short-url" id="shortUrlText"></div>
+      <button class="btn-copy" id="copyBtn" onclick="copyUrl()">复制</button>
+    </div>
+  </div>
+
+  <script>
+    const input = document.getElementById('urlInput');
+    const genBtn = document.getElementById('genBtn');
+    const errorBox = document.getElementById('error');
+    const resultBox = document.getElementById('resultBox');
+    const shortUrlText = document.getElementById('shortUrlText');
+    const copyBtn = document.getElementById('copyBtn');
+
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') generate();
+    });
+
+    function normalizeUrl(raw) {
+      let url = raw.trim();
+      if (!url) return '';
+      // 用户没写协议 → 自动补 https://
+      if (!/^https?:\/\//i.test(url)) {
+        url = 'https://' + url;
+      }
+      return url;
+    }
+
+    async function generate() {
+      const raw = input.value.trim();
+      errorBox.classList.remove('show');
+      resultBox.classList.remove('show');
+
+      if (!raw) {
+        showError('请输入链接');
+        return;
+      }
+
+      const url = normalizeUrl(raw);
+
+      let parsed;
+      try {
+        parsed = new URL(url);
+      } catch {
+        showError('链接格式不正确');
+        return;
+      }
+
+      if (!['http:', 'https:'].includes(parsed.protocol)) {
+        showError('仅支持 http / https 链接');
+        return;
+      }
+
+      genBtn.disabled = true;
+      genBtn.textContent = '生成中...';
+
+      try {
+        const res = await fetch('/api/shorten', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: parsed.toString() })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          showError(data.error || '生成失败，请重试');
+          return;
+        }
+
+        shortUrlText.textContent = data.short;
+        resultBox.classList.add('show');
+        copyBtn.textContent = '复制';
+        copyBtn.classList.remove('copied');
+      } catch (e) {
+        showError('网络错误，请重试');
+      } finally {
+        genBtn.disabled = false;
+        genBtn.textContent = '生成';
+      }
+    }
+
+    function showError(msg) {
+      errorBox.textContent = msg;
+      errorBox.classList.add('show');
+    }
+
+    function copyUrl() {
+      const text = shortUrlText.textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        copyBtn.textContent = '已复制 ✓';
+        copyBtn.classList.add('copied');
+        setTimeout(() => {
+          copyBtn.textContent = '复制';
+          copyBtn.classList.remove('copied');
+        }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>
