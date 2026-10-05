@@ -80,7 +80,9 @@
 
     <div class="error" id="error"></div>
 
-    <div class="cf-turnstile" data-sitekey="0x4AAAAAAFOanFHh442OmbPE" data-size="invisible" data-callback="onTurnstile"></div>
+    <div style="margin:12px 0; display:flex; justify-content:center;">
+      <div class="cf-turnstile" data-sitekey="0x4AAAAAAFOanFHh442OmbPE" data-callback="onTurnstile"></div>
+    </div>
 
     <div class="result" id="resultBox">
       <div class="result-label">你的短链接</div>
@@ -128,6 +130,9 @@
       return url;
     }
 
+    let turnstileToken = '';
+    window.onTurnstile = function(token) { turnstileToken = token; };
+
     async function generate() {
       const raw = input.value.trim();
       errorBox.classList.remove('show');
@@ -135,21 +140,12 @@
       if (!raw) { showError('请输入链接'); return; }
       const url = normalizeUrl(raw);
       try { new URL(url); } catch { showError('链接格式不正确'); return; }
+      if (!turnstileToken) { showError('请先完成人机验证'); return; }
 
       genBtn.disabled = true;
-      genBtn.textContent = '验证中...';
+      genBtn.textContent = '生成中...';
 
       try {
-        let turnstileToken = '';
-        if (window.turnstile) {
-          turnstileToken = await new Promise((resolve, reject) => {
-            window.onTurnstile = token => resolve(token);
-            window.turnstile.execute();
-            setTimeout(() => reject(new Error('timeout')), 10000);
-          });
-        }
-
-        genBtn.textContent = '生成中...';
         const res = await fetch('/api/shorten', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -162,7 +158,7 @@
         copyBtn.textContent = '复制';
         copyBtn.classList.remove('copied');
       } catch (e) {
-        showError('验证失败，请重试');
+        showError('网络错误，请重试');
       } finally {
         genBtn.disabled = false;
         genBtn.textContent = '生成';
