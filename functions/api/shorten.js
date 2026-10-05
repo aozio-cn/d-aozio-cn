@@ -24,12 +24,6 @@ export async function onRequestPost(context) {
     try { parsed = new URL(url); } catch { return json({ error: '链接格式不正确' }, 400); }
     if (!['http:', 'https:'].includes(parsed.protocol)) return json({ error: '仅支持 http / https 链接' }, 400);
 
-    // Turnstile 人机验证（配了 secret 才验证）
-    if (env.TURNSTILE_SECRET) {
-      const ok = await verifyTurnstile(body.turnstileToken, clientIP, env.TURNSTILE_SECRET);
-      if (!ok) return json({ error: '人机验证失败，请刷新重试' }, 403);
-    }
-
     // 多源恶意链接检测
     const blockReason = await checkUrlSafety(parsed.toString(), parsed.hostname);
     if (blockReason) {
@@ -52,21 +46,6 @@ export async function onRequestPost(context) {
   } catch (err) {
     return json({ error: '服务器错误，请稍后重试' }, 500);
   }
-}
-
-async function verifyTurnstile(token, ip, secret) {
-  if (!token) return false;
-  try {
-    const form = new FormData();
-    form.append('secret', secret);
-    form.append('response', token);
-    if (ip) form.append('remoteip', ip);
-    const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-      method: 'POST', body: form, signal: AbortSignal.timeout(5000)
-    });
-    const data = await res.json();
-    return !!data.success;
-  } catch { return false; }
 }
 
 async function checkUrlSafety(url, domain) {

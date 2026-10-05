@@ -51,7 +51,6 @@
   }
   footer a { color: #999; text-decoration: none; }
 </style>
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 <body>
   <div class="container">
@@ -76,10 +75,6 @@
 
     <div style="font-size:12px;color:#ccc;margin-bottom:10px;">
       后台：<a href="/admin" style="color:#aaa;text-decoration:none;">/admin</a>
-    </div>
-
-    <div style="margin:12px 0; display:flex; justify-content:center;">
-      <div class="cf-turnstile" data-sitekey="0x4AAAAAAFOanFHh442OmbPE" data-callback="onTurnstile"></div>
     </div>
 
     <div class="error" id="error"></div>
@@ -130,9 +125,6 @@
       return url;
     }
 
-    let turnstileToken = '';
-    window.onTurnstile = function(token) { turnstileToken = token; };
-
     async function generate() {
       const raw = input.value.trim();
       errorBox.classList.remove('show');
@@ -140,7 +132,6 @@
       if (!raw) { showError('请输入链接'); return; }
       const url = normalizeUrl(raw);
       try { new URL(url); } catch { showError('链接格式不正确'); return; }
-      if (!turnstileToken) { showError('请先完成人机验证'); return; }
 
       genBtn.disabled = true;
       genBtn.textContent = '生成中...';
@@ -149,7 +140,7 @@
         const res = await fetch('/api/shorten', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url, days: parseInt(daysSelect.value), turnstileToken })
+          body: JSON.stringify({ url, days: parseInt(daysSelect.value) })
         });
         const data = await res.json();
         if (!res.ok) { showError(data.error || '生成失败'); return; }
