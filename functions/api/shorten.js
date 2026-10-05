@@ -18,79 +18,92 @@ export async function onRequestPost(context) {
     const url = (body.url || '').trim();
     const days = parseInt(body.days) || 30;
 
-    if (!url) {
-      return json({ error: '请提供链接' }, 400);
-    }
+    if (!url) return json({ error: '请提供链接' }, 400);
 
     let parsed;
-    try {
-      parsed = new URL(url);
-    } catch {
-      return json({ error: '链接格式不正确' }, 400);
-    }
+    try { parsed = new URL(url); } catch { return json({ error: '链接格式不正确' }, 400); }
+    if (!['http:', 'https:'].includes(parsed.protocol)) return json({ error: '仅支持 http / https 链接' }, 400);
 
-    if (!['http:', 'https:'].includes(parsed.protocol)) {
-      return json({ error: '仅支持 http / https 链接' }, 400);
-    }
-
-    // Google Safe Browsing 检查
-    if (env.GSB_API_KEY) {
-      const gsbResult = await checkSafeBrowsing(parsed.toString(), env.GSB_API_KEY);
-      if (gsbResult) {
-        return json({ error: '该链接被 Google Safe Browsing 标记为不安全，无法生成短链' }, 400);
-      }
+    // 多源恶意链接检测
+    const blockReason = await checkUrlSafety(parsed.toString(), parsed.hostname, env);
+    if (blockReason) {
+      return json({ error: `该链接被安全检测标记为${blockReason}，无法生成短链` }, 400);
     }
 
     // 过期时间：最多180天
-    const maxDays = 180;
-    const actualDays = Math.min(days, maxDays);
+    const actualDays = Math.min(days, 180);
     const expireAt = now + actualDays * 24 * 60 * 60 * 1000;
 
-    // 生成 6 位随机短码，碰撞就重新生成
+    // 生成 6 位随机短码
     let code = generateCode(6);
-    while (await env.LINKS.get(code)) {
-      code = generateCode(6);
-    }
+    while (await env.LINKS.get(code)) code = generateCode(6);
 
-    // 存元数据
-    const meta = {
-      url: parsed.toString(),
-      time: now,
-      ip: clientIP,
-      expireAt: expireAt,
-      days: actualDays
-    };
-    // KV TTL 用过期时间，自动删除
+    const meta = { url: parsed.toString(), time: now, ip: clientIP, expireAt, days: actualDays };
     const ttlSeconds = Math.max(60, Math.floor((expireAt - now) / 1000));
     await env.LINKS.put(code, JSON.stringify(meta), { expirationTtl: ttlSeconds });
 
-    const short = `https://d.aozio.cn/${code}`;
-    return json({ short, code, days: actualDays });
+    return json({ short: `https://d.aozio.cn/${code}`, code, days: actualDays });
   } catch (err) {
     return json({ error: '服务器错误，请稍后重试' }, 500);
   }
 }
 
-async function checkSafeBrowsing(url, apiKey) {
+async function checkUrlSafety(url, domain, env) {
+  const checks = [checkPhishDestroy, checkPhishunt, checkGoogleSB];
+  for (const check of checks) {
+    try {
+      const result = await check(url, domain, env);
+      if (result) return result;
+    } catch {}
+  }
+  return null;
+}
+
+async function checkPhishDestroy(url, domain) {
   try {
-    const res = await fetch(`https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${apiKey}`, {
+    const res = await fetch(`https://api.destroy.tools/v1/check?domain=${encodeURIComponent(domain)}`, {
+      headers: { 'User-Agent': 'd-aozio-cn' },
+      signal: AbortSignal.timeout(5000)
+    });
+    const data = await res.json();
+    if (data.threat && data.severity !== 'low') return '钓鱼/诈骗网站';
+  } catch {}
+  return null;
+}
+
+async function checkPhishunt(url, domain) {
+  try {
+    const res = await fetch(`https://phishunt.io/api/v1/analyze?url=${encodeURIComponent(url)}`, {
+      headers: { 'User-Agent': 'd-aozio-cn' },
+      signal: AbortSignal.timeout(5000)
+    });
+    const data = await res.json();
+    if (data.verdict === 'likely_phishing' || data.verdict === 'very_likely_phishing') return '钓鱼网站';
+  } catch {}
+  return null;
+}
+
+async function checkGoogleSB(url, domain, env) {
+  if (!env.GSB_API_KEY) return null;
+  try {
+    const res = await fetch(`https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${env.GSB_API_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         client: { clientId: 'd-aozio-cn', clientVersion: '1.0' },
         threatInfo: {
-          threatTypes: ['MALWARE', 'SOCIAL_ENGINEERING', 'UNWANTED_SOFTWARE', 'POTENTIALLY_HARMFUL_APPLICATION'],
+          threatTypes: ['MALWARE', 'SOCIAL_ENGINEERING', 'UNWANTED_SOFTWARE'],
           platformTypes: ['ANY_PLATFORM'],
           threatEntryTypes: ['URL'],
           threatEntries: [{ url }]
         }
-      })
+      }),
+      signal: AbortSignal.timeout(5000)
     });
     const data = await res.json();
-    return data && data.matches && data.matches.length > 0;
-  } catch {
-    return false;
-  }
+    if (data.matches && data.matches.length > 0) return '恶意软件网站';
+  } catch {}
+  return null;
 }
 
 function generateCode(length) {
@@ -98,15 +111,12 @@ function generateCode(length) {
   let out = '';
   const arr = new Uint32Array(length);
   crypto.getRandomValues(arr);
-  for (let i = 0; i < length; i++) {
-    out += chars[arr[i] % chars.length];
-  }
+  for (let i = 0; i < length; i++) out += chars[arr[i] % chars.length];
   return out;
 }
 
 function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
-    status,
-    headers: { 'Content-Type': 'application/json; charset=utf-8' }
+    status, headers: { 'Content-Type': 'application/json; charset=utf-8' }
   });
 }
