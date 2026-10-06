@@ -82,7 +82,7 @@ td{padding:12px 14px;font-size:13px;border-bottom:1px solid #f5f5f5;vertical-ali
 <body>
 <div class="login-wrap" id="loginView">
   <div class="login-box">
-    <h1>公共后台</h1>
+    <h1>短链接后台</h1>
     <input type="password" id="pwd" placeholder="访问密码" autofocus>
     <button id="loginBtn">登录</button>
     <div class="login-err" id="loginErr">密码错误</div>
