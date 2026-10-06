@@ -86,9 +86,13 @@ function renderWarningPage(target) {
     </div>
   </div>
   <div class="footer">
-    <div>© 2026 星诺综合团队</div>
+    <div>© <span id="yr"></span> 星诺综合团队</div>
     <div>举报/投诉：<a href="mailto:huangxingyan@aozio.cn">huangxingyan@aozio.cn</a></div>
   </div>
+<script>
+  var y = new Date().getFullYear();
+  document.getElementById('yr').textContent = y === 2026 ? '2026' : '2026-' + y;
+</script>
 </body>
 </html>`;
 }
