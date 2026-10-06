@@ -109,12 +109,18 @@ function renderExpiredPage(code) {
   .icon { font-size:48px; margin-bottom:16px; }
   h1 { font-size:20px; font-weight:600; color:#111; margin-bottom:8px; }
   p { color:#999; font-size:14px; }
+  .foot { position:fixed; bottom:20px; font-size:12px; color:#ccc; }
 </style>
 </head>
 <body>
   <div class="icon">⏳</div>
   <h1>链接已过期</h1>
   <p>短链接「${escapeHtml(code)}」已超过有效期</p>
+  <div class="foot">© <span id="yr"></span> 星诺综合团队</div>
+<script>
+  var y = new Date().getFullYear();
+  document.getElementById('yr').textContent = y === 2026 ? '2026' : '2026-' + y;
+</script>
 </body>
 </html>`;
 }
@@ -131,12 +137,18 @@ function renderDeletedPage(code) {
   .icon { font-size:48px; margin-bottom:16px; }
   h1 { font-size:20px; font-weight:600; color:#111; margin-bottom:8px; }
   p { color:#999; font-size:14px; }
+  .foot { position:fixed; bottom:20px; font-size:12px; color:#ccc; }
 </style>
 </head>
 <body>
   <div class="icon">🚫</div>
   <h1>链接已删除</h1>
   <p>短链接「${escapeHtml(code)}」已被管理员删除</p>
+  <div class="foot">© <span id="yr"></span> 星诺综合团队</div>
+<script>
+  var y = new Date().getFullYear();
+  document.getElementById('yr').textContent = y === 2026 ? '2026' : '2026-' + y;
+</script>
 </body>
 </html>`;
 }
