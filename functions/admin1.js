@@ -121,6 +121,7 @@ td{padding:12px 14px;font-size:13px;border-bottom:1px solid #f5f5f5;vertical-ali
   <div class="empty" id="emptyTip" style="display:none">暂无短链</div>
 </div>
 <script>
+window.addEventListener("load",function(){
 var pwd=sessionStorage.getItem("admin1_pwd")||"";
 var allLinks=[],page=1,pageSize=20;
 
@@ -237,6 +238,7 @@ if(pwd){
   .then(function(r){return r.json();})
   .then(function(d){if(d.success)showDash(d);});
 }
+});
 </script>
 </body>
 </html>`;
