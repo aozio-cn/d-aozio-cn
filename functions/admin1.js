@@ -39,7 +39,7 @@ async function loadLinks(env) {
     const raw = await env.LINKS.get(key.name);
     try {
       const meta = JSON.parse(raw);
-      links.push({ code: key.name, url: meta.url || '', time: meta.time || 0, ip: meta.ip || '', deleted: !!meta.deleted });
+      links.push({ code: key.name, url: meta.url || '', time: meta.time || 0, ip: meta.ip || '', deleted: !!meta.deleted, expireAt: meta.expireAt || 0 });
     } catch {}
   }
   links.sort((a,b) => b.time - a.time);
@@ -110,7 +110,7 @@ td{padding:12px 14px;font-size:13px;border-bottom:1px solid #f5f5f5;vertical-ali
   </div>
   <div class="search-bar"><input type="text" id="searchInput" placeholder="搜索：时间 / IP / 短链 / 原链接"></div>
   <div class="table-wrap"><table>
-    <thead><tr><th>时间</th><th>IP</th><th>短链</th><th>原链接</th><th>操作</th></tr></thead>
+    <thead><tr><th>创建时间</th><th>过期时间</th><th>IP</th><th>短链</th><th>原链接</th><th>操作</th></tr></thead>
     <tbody id="linkList"></tbody>
   </table></div>
   <div class="pagination">
@@ -165,13 +165,18 @@ function getFiltered(){
   });
 }
 function doDel(code,btn){
-  if(!confirm("确定删除短链 "+code+"？"))return;
+  if(btn.dataset.ready!="1"){
+    btn.dataset.ready="1";
+    btn.textContent="确认删除？";
+    setTimeout(function(){btn.dataset.ready="0";btn.textContent="删除";},3000);
+    return;
+  }
   btn.disabled=true;
   fetch("/admin1",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:pwd,action:"delete",code:code})})
   .then(function(r){return r.json();})
   .then(function(d){
     if(d.success){var l=allLinks.find(function(x){return x.code===code;});if(l)l.deleted=true;renderPage();}
-    else{btn.disabled=false;alert(d.error||"删除失败");}
+    else{btn.disabled=false;btn.textContent="删除";alert(d.error||"删除失败");}
   });
 }
 function renderPage(){
@@ -190,6 +195,7 @@ function renderPage(){
       var tr=document.createElement("tr");
       if(l.deleted)tr.className="del-row";
       var td1=document.createElement("td");td1.className="time";td1.textContent=fmtTime(l.time);tr.appendChild(td1);
+      var td1b=document.createElement("td");td1b.className="time";td1b.textContent=fmtTime(l.expireAt);tr.appendChild(td1b);
       var td2=document.createElement("td");td2.className="ip";td2.textContent=l.ip||"-";tr.appendChild(td2);
       var td3=document.createElement("td");
       var sl=document.createElement("span");sl.className="short-link";sl.textContent=l.code;
