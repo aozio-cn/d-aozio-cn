@@ -28,6 +28,7 @@ async function loadLinks(env) {
     try {
       const meta = JSON.parse(raw);
       if (meta.deleted) continue;
+      if (!meta.time) continue;
       links.push({ code: key.name, url: meta.url || '', time: meta.time || 0, ip: meta.ip || '', expireAt: meta.expireAt || 0 });
     } catch {}
   }

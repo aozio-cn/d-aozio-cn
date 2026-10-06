@@ -39,6 +39,7 @@ async function loadLinks(env) {
     const raw = await env.LINKS.get(key.name);
     try {
       const meta = JSON.parse(raw);
+      if (!meta.time) continue;
       links.push({ code: key.name, url: meta.url || '', time: meta.time || 0, ip: meta.ip || '', deleted: !!meta.deleted, expireAt: meta.expireAt || 0 });
     } catch {}
   }
