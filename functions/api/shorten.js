@@ -39,7 +39,8 @@ export async function onRequestPost(context) {
     while (await env.LINKS.get(code)) code = generateCode(6);
 
     const meta = { url: parsed.toString(), time: now, ip: clientIP, expireAt, days: actualDays };
-    const ttlSeconds = Math.max(60, Math.floor((expireAt - now) / 1000));
+    // 短链过期后记录再保留180天（后台日志），TTL = 有效期 + 180天
+    const ttlSeconds = Math.max(60, Math.floor((actualDays + 180) * 24 * 60 * 60));
     await env.LINKS.put(code, JSON.stringify(meta), { expirationTtl: ttlSeconds });
 
     return json({ short: `https://d.aozio.cn/${code}`, code, days: actualDays });
