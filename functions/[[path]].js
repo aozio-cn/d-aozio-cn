@@ -1,11 +1,14 @@
+import { onRequestGet as adminGet, onRequestPost as adminPost } from './admin.js';
+
 export async function onRequestGet(context) {
   const { env, params, request } = context;
-
   const code = Array.isArray(params.path) ? params.path.join('/') : String(params.path || '');
 
-  if (!code) {
-    return env.ASSETS.fetch(request);
-  }
+  // 自定义后台路径
+  const adminPath = env.ADMIN_PATH || 'admin';
+  if (code === adminPath) return adminGet(context);
+
+  if (!code) return env.ASSETS.fetch(request);
 
   const raw = await env.LINKS.get(code);
 
@@ -26,6 +29,14 @@ export async function onRequestGet(context) {
     status: 404,
     headers: { 'Content-Type': 'text/html; charset=utf-8' }
   });
+}
+
+export async function onRequestPost(context) {
+  const { env, params } = context;
+  const code = Array.isArray(params.path) ? params.path.join('/') : String(params.path || '');
+  const adminPath = env.ADMIN_PATH || 'admin';
+  if (code === adminPath) return adminPost(context);
+  return new Response('Not Found', { status: 404 });
 }
 
 function renderWarningPage(target) {

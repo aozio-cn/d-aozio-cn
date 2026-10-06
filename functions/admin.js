@@ -1,16 +1,17 @@
-const ADMIN_PASSWORD = 'admin';
-
 export async function onRequestGet(context) {
-  return new Response(renderAdminPage(), {
+  const { env } = context;
+  const adminPath = env.ADMIN_PATH || 'admin';
+  return new Response(renderAdminPage(adminPath), {
     headers: { 'Content-Type': 'text/html; charset=utf-8' }
   });
 }
 
 export async function onRequestPost(context) {
   const { request, env } = context;
+  const adminPassword = env.ADMIN_PASSWORD || 'admin';
   try {
     const body = await request.json();
-    if (body.password !== ADMIN_PASSWORD) {
+    if (body.password !== adminPassword) {
       return json({ success: false, error: '访问码错误' }, 403);
     }
 
@@ -23,6 +24,7 @@ export async function onRequestPost(context) {
 
     for (const key of list.keys) {
       const code = key.name;
+      if (code.startsWith('rl:')) continue;
       const raw = await env.LINKS.get(code);
       let url = raw, time = null, ip = '';
       try {
@@ -39,7 +41,7 @@ export async function onRequestPost(context) {
 
     return json({
       success: true,
-      stats: { total: list.keys.length, today: todayCount },
+      stats: { total: links.length, today: todayCount },
       links
     });
   } catch (err) {
@@ -47,7 +49,7 @@ export async function onRequestPost(context) {
   }
 }
 
-function renderAdminPage() {
+function renderAdminPage(adminPath) {
   var h = '';
   h += '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n';
   h += '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n';
@@ -57,8 +59,6 @@ function renderAdminPage() {
   h += '.login-wrap { display:flex; align-items:center; justify-content:center; min-height:100vh; }\n';
   h += '.login-box { background:#fff; padding:40px; border-radius:12px; width:360px; text-align:center; box-shadow:0 2px 12px rgba(0,0,0,0.06); }\n';
   h += '.login-box h1 { font-size:20px; margin-bottom:8px; color:#111; }\n';
-  h += '.login-tip { font-size:13px; color:#999; margin-bottom:20px; }\n';
-  h += '.login-tip b { color:#666; }\n';
   h += '.login-box input { width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; font-size:14px; margin-bottom:12px; outline:none; }\n';
   h += '.login-box input:focus { border-color:#999; }\n';
   h += '.login-box button { width:100%; padding:12px; background:#111; color:#fff; border:none; border-radius:8px; font-size:14px; cursor:pointer; }\n';
@@ -96,18 +96,15 @@ function renderAdminPage() {
   h += '.empty { text-align:center; padding:40px; color:#bbb; font-size:14px; }\n';
   h += '</style>\n</head>\n<body>\n';
 
-  // 登录页
   h += '<div class="login-wrap" id="loginView">\n';
   h += '  <div class="login-box">\n';
   h += '    <h1>后台管理</h1>\n';
-  h += '    <p class="login-tip">访问密码：<b>admin</b></p>\n';
   h += '    <input type="password" id="pwd" placeholder="请输入访问密码" autofocus>\n';
   h += '    <button onclick="login()">登录</button>\n';
   h += '    <div class="login-err" id="loginErr">密码错误</div>\n';
   h += '  </div>\n';
   h += '</div>\n';
 
-  // 仪表盘
   h += '<div class="dashboard" id="dashView">\n';
   h += '  <div class="header">\n';
   h += '    <h1>短链后台</h1>\n';
@@ -132,16 +129,16 @@ function renderAdminPage() {
   h += '  <div class="empty" id="emptyTip" style="display:none">暂无短链</div>\n';
   h += '</div>\n';
 
-  // JS
   h += '<script>\n';
   h += 'var pwd = sessionStorage.getItem("admin_pwd") || "";\n';
   h += 'var allLinks = [];\n';
   h += 'var page = 1;\n';
   h += 'var pageSize = 20;\n';
+  h += 'var adminPath = "' + adminPath + '";\n';
 
   h += 'function login() {\n';
   h += '  var p = document.getElementById("pwd").value;\n';
-  h += '  fetch("/admin", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({password:p}) })\n';
+  h += '  fetch("/"+adminPath, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({password:p}) })\n';
   h += '  .then(function(r){return r.json();}).then(function(data){\n';
   h += '    if(data.success){ sessionStorage.setItem("admin_pwd",p); pwd=p; showDash(data); }\n';
   h += '    else { document.getElementById("loginErr").style.display="block"; }\n';
@@ -226,7 +223,7 @@ function renderAdminPage() {
   h += '}\n';
 
   h += 'if(pwd){\n';
-  h += '  fetch("/admin",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:pwd})})\n';
+  h += '  fetch("/"+adminPath,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:pwd})})\n';
   h += '  .then(function(r){return r.json();}).then(function(data){ if(data.success) showDash(data); });\n';
   h += '}\n';
 
