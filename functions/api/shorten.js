@@ -49,11 +49,6 @@ export async function onRequestPost(context) {
 }
 
 async function checkUrlSafety(url, domain) {
-  // 先做本地启发式检查（同步，快）
-  const localResult = checkLocalHeuristics(url, domain);
-  if (localResult) return localResult;
-
-  // 再查外部 API
   const checks = [checkPhishDestroy, checkPhishunt, checkScamLens];
   for (const check of checks) {
     try {
@@ -61,27 +56,6 @@ async function checkUrlSafety(url, domain) {
       if (result) return result;
     } catch {}
   }
-  return null;
-}
-
-function checkLocalHeuristics(url, domain) {
-  const d = domain.toLowerCase();
-
-  // IP 地址直接访问
-  if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(d)) return 'IP直连地址';
-
-  // 可疑 TLD
-  const badTLDs = ['.xyz', '.top', '.click', '.loan', '.work', '.date', '.racing', '.review', '.trade', '.men', '.cfd', '.gq', '.ml', '.ga', '.tk'];
-  for (const tld of badTLDs) {
-    if (d.endsWith(tld)) return `可疑后缀 ${tld}`;
-  }
-
-  // 可疑关键词
-  const badKeywords = ['login', 'verify', 'secure', 'wallet', 'airdrop', 'metamask', 'myether', 'binance', 'auth', 'signin', 'account', 'update', 'web3', 'claim', 'reward'];
-  for (const kw of badKeywords) {
-    if (d.includes(kw)) return `含可疑关键词 "${kw}"`;
-  }
-
   return null;
 }
 
