@@ -1,26 +1,28 @@
 import { onRequestGet as adminGet, onRequestPost as adminPost } from './admin.js';
+import { onRequestGet as admin1Get, onRequestPost as admin1Post } from './admin1.js';
 
 export async function onRequestGet(context) {
   const { env, params, request } = context;
   const code = Array.isArray(params.path) ? params.path.join('/') : String(params.path || '');
 
-  // 自定义后台路径
-  const adminPath = env.ADMIN_PATH || 'admin';
-  if (code === adminPath) return adminGet(context);
+  if (code === 'admin') return adminGet(context);
+  if (code === 'admin1') return admin1Get(context);
 
   if (!code) return env.ASSETS.fetch(request);
 
   const raw = await env.LINKS.get(code);
 
   if (raw) {
-    let target;
-    try {
-      const meta = JSON.parse(raw);
-      target = meta.url;
-    } catch {
-      target = raw;
+    let meta;
+    try { meta = JSON.parse(raw); } catch { return env.ASSETS.fetch(request); }
+
+    if (meta.deleted) {
+      return new Response(renderDeletedPage(code), {
+        headers: { 'Content-Type': 'text/html; charset=utf-8' }
+      });
     }
-    return new Response(renderWarningPage(target), {
+
+    return new Response(renderWarningPage(meta.url), {
       headers: { 'Content-Type': 'text/html; charset=utf-8' }
     });
   }
@@ -32,10 +34,10 @@ export async function onRequestGet(context) {
 }
 
 export async function onRequestPost(context) {
-  const { env, params } = context;
+  const { params } = context;
   const code = Array.isArray(params.path) ? params.path.join('/') : String(params.path || '');
-  const adminPath = env.ADMIN_PATH || 'admin';
-  if (code === adminPath) return adminPost(context);
+  if (code === 'admin') return adminPost(context);
+  if (code === 'admin1') return admin1Post(context);
   return new Response('Not Found', { status: 404 });
 }
 
@@ -85,6 +87,31 @@ function renderWarningPage(target) {
 </html>`;
 }
 
+function renderDeletedPage(code) {
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>链接已删除 · d.aozio.cn</title>
+<style>
+  body { font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif; background:#f5f6f7; color:#333; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; margin:0; padding:20px; text-align:center; }
+  .icon { font-size:48px; margin-bottom:16px; }
+  h1 { font-size:20px; font-weight:600; color:#111; margin-bottom:8px; }
+  p { color:#999; font-size:14px; margin-bottom:24px; }
+  a { color:#666; text-decoration:none; font-size:14px; }
+  a:hover { text-decoration:underline; }
+</style>
+</head>
+<body>
+  <div class="icon">🚫</div>
+  <h1>链接已删除</h1>
+  <p>短链接「${escapeHtml(code)}」已被管理员删除</p>
+  <a href="/">← 返回首页</a>
+</body>
+</html>`;
+}
+
 function render404(code) {
   return `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -109,7 +136,7 @@ function render404(code) {
 }
 
 function escapeHtml(s) {
-  return s.replace(/[&<>"']/g, c => ({
+  return String(s).replace(/[&<>"']/g, c => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   }[c]));
 }
