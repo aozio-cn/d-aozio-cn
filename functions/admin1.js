@@ -198,7 +198,7 @@ function renderPage(){
       var td1b=document.createElement("td");td1b.className="time";td1b.textContent=fmtTime(l.expireAt);tr.appendChild(td1b);
       var td2=document.createElement("td");td2.className="ip";td2.textContent=l.ip||"-";tr.appendChild(td2);
       var td3=document.createElement("td");
-      var sl=document.createElement("span");sl.className="short-link";sl.textContent=l.code;
+      var sl=document.createElement("span");sl.className="short-link";sl.textContent=su;
       sl.onclick=function(){copyText(su);};
       td3.appendChild(sl);
       if(l.deleted){var b=document.createElement("span");b.className="del-badge";b.textContent="已删除";td3.appendChild(b);}
