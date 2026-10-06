@@ -122,7 +122,7 @@ td{padding:12px 14px;font-size:13px;border-bottom:1px solid #f5f5f5;vertical-ali
   <div class="empty" id="emptyTip" style="display:none">暂无短链</div>
 </div>
 <script>
-window.addEventListener("load",function(){
+document.addEventListener("DOMContentLoaded",function(){
 var pwd=sessionStorage.getItem("admin1_pwd")||"";
 var allLinks=[],page=1,pageSize=20;
 
@@ -243,7 +243,10 @@ function showDash(d){
 if(pwd){
   fetch("/admin1",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:pwd})})
   .then(function(r){return r.json();})
-  .then(function(d){if(d.success)showDash(d);});
+  .then(function(d){
+    if(d.success) showDash(d);
+    else sessionStorage.removeItem("admin1_pwd");
+  });
 }
 });
 </script>

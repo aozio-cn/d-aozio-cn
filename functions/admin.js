@@ -107,7 +107,7 @@ td{padding:12px 14px;font-size:13px;border-bottom:1px solid #f5f5f5;vertical-ali
   <div class="empty" id="emptyTip" style="display:none">暂无短链</div>
 </div>
 <script>
-window.addEventListener("load",function(){
+document.addEventListener("DOMContentLoaded",function(){
 var pwd=sessionStorage.getItem("admin_pwd")||"";
 var allLinks=[],page=1,pageSize=20;
 
