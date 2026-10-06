@@ -31,7 +31,7 @@ export async function onRequestPost(context) {
     }
 
     // 过期时间：最多180天
-    const actualDays = Math.min(days, 180);
+    const actualDays = Math.min(Math.max(days, 1), 180);
     const expireAt = now + actualDays * 24 * 60 * 60 * 1000;
 
     // 生成 6 位随机短码

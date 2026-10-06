@@ -108,26 +108,25 @@ function renderExpiredPage(code) {
 </style>
 </head>
 <body>
-  <div class="icon">⌛</div>
+  <div class="icon">⏳</div>
   <h1>链接已过期</h1>
   <p>短链接「${escapeHtml(code)}」已超过有效期</p>
 </body>
 </html>`;
 }
 
-function renderDeletedPage(code) {  return `<!DOCTYPE html>
+function renderDeletedPage(code) {
+  return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>链接已删除 · d.aozio.cn</title>
+<title>链接已删除</title>
 <style>
   body { font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif; background:#f5f6f7; color:#333; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; margin:0; padding:20px; text-align:center; }
   .icon { font-size:48px; margin-bottom:16px; }
   h1 { font-size:20px; font-weight:600; color:#111; margin-bottom:8px; }
-  p { color:#999; font-size:14px; margin-bottom:24px; }
-  a { color:#666; text-decoration:none; font-size:14px; }
-  a:hover { text-decoration:underline; }
+  p { color:#999; font-size:14px; }
 </style>
 </head>
 <body>
