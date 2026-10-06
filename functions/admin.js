@@ -83,6 +83,7 @@ td{padding:12px 14px;font-size:13px;border-bottom:1px solid #f5f5f5;vertical-ali
 <div class="login-wrap" id="loginView">
   <div class="login-box">
     <h1>短链接后台</h1>
+    <p style="font-size:12px;color:#bbb;margin-bottom:16px;">访问密码：admin</p>
     <input type="password" id="pwd" placeholder="访问密码" autofocus>
     <button id="loginBtn">登录</button>
     <div class="login-err" id="loginErr">密码错误</div>
