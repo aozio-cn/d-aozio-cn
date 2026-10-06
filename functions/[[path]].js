@@ -107,7 +107,6 @@ function renderDeletedPage(code) {
   <div class="icon">🚫</div>
   <h1>链接已删除</h1>
   <p>短链接「${escapeHtml(code)}」已被管理员删除</p>
-  <a href="/">← 返回首页</a>
 </body>
 </html>`;
 }
